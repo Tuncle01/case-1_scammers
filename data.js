@@ -87,7 +87,7 @@ const scammers = [
         actions: [
           { label: "Перевожу — это же мама", next: "sent_money", effect: { money: -5000 }, kind: "bad" },
           { label: "Говорю: «Мама так не пишет» — и блокирую", next: null, effect: { caught: 1 }, kind: "good" },
-          { label: "Пишу папе и уточняю", next: "dad_check", effect: {}, kind: "good" }
+          { label: "Пишу папе и уточняю", next: "dad_check_5000", effect: {}, kind: "good" }
         ]
       },
       ask_secret: {
@@ -104,9 +104,17 @@ const scammers = [
           { label: "Блокирую номер", next: null, effect: { caught: 1 }, kind: "good" }
         ]
       },
-      dad_check: {
+      dad_check_5000: {
         sys: true,
         text: "Ты написал папе. Он ответил: «Мама дома, ничего не просила. Это мошенники».",
+        actions: [
+          { label: "Блокирую номер", next: null, effect: { caught: 1 }, kind: "good" },
+          { label: "Всё равно перевожу 5000", next: "sent_money", effect: { money: -5000 }, kind: "bad" }
+        ]
+      },
+      dad_check_3000: {
+        sys: true,
+        text: "Ты написал папе. Он ответил: «Мама дома, никакой больницы нет. Это мошенники».",
         actions: [
           { label: "Блокирую номер", next: null, effect: { caught: 1 }, kind: "good" },
           { label: "Всё равно перевожу 3000", next: "sent_more", effect: { money: -3000 }, kind: "bad" }
@@ -118,7 +126,7 @@ const scammers = [
           { label: "Перевожу ещё 3000", next: "sent_more", effect: { money: -3000 }, kind: "bad" },
           { label: "Говорю: «Сначала позвоню — проверю, что это ты»", next: "call_check", effect: {}, kind: "good" },
           { label: "Прошу фото из больницы", next: "ask_photo", effect: {}, kind: "neutral" },
-          { label: "Пишу папе: «Мама в больнице, ты знаешь?»", next: "dad_check", effect: {}, kind: "good" },
+          { label: "Пишу папе: «Мама в больнице, ты знаешь?»", next: "dad_check_3000", effect: {}, kind: "good" },
           { label: "Понимаю, что это развод — блокирую", next: null, effect: { caught: 1 }, kind: "good" }
         ]
       },
@@ -155,7 +163,7 @@ const scammers = [
   // friend Kirill
   {
     id: "investor",
-    name: "Друг Кирилл",
+    name: "Сомнительный друг Кирилл",
     avatar: "😎",
     isSafe: false,
     startNode: "start",
@@ -364,7 +372,15 @@ const scammers = [
           { label: "Перехожу по ссылке и оплачиваю", next: "paid_link", effect: { money: -2000 }, kind: "bad" },
           { label: "Предлагаю сделку через официальную площадку", next: "official", effect: {}, kind: "good" },
           { label: "Спрашиваю: «Почему не через площадку?»", next: "ask_why", effect: {}, kind: "neutral" },
-          { label: "Отказываюсь — аккаунты продавать нельзя", next: null, effect: { caught: 1 }, kind: "good" }
+          { label: "Спрашиваю: «Почему так дёшево?»", next: "ask_cheap", effect: {}, kind: "neutral" }
+        ]
+      },
+      ask_cheap: {
+        text: "Да мне срочно деньги нужны, поэтому дёшево. Если не возьмёшь — найдётся другой. Скидываю ссылку.",
+        actions: [
+          { label: "Перехожу по ссылке", next: "paid_link", effect: { money: -2000 }, kind: "bad" },
+          { label: "Отказываюсь — слишком давит", next: null, effect: { caught: 1 }, kind: "good" },
+          { label: "Предлагаю официальную площадку", next: "official", effect: {}, kind: "good" }
         ]
       },
       ask_why: {
@@ -400,51 +416,76 @@ const scammers = [
   },
 
   // normal friend
-  {
-    id: "friend",
-    name: "Друг Артём",
-    avatar: "🧑",
-    isSafe: true,
-    startNode: "start",
-    nodes: {
-      start: {
-        text: "Привет! Ты же шаришь в финансах? Подскажи, как копить на наушники — никак не получается отложить.",
-        actions: [
-          { label: "Советую правило 50/30/20", next: "advice_503020", effect: {}, kind: "good" },
-          { label: "Говорю: «Просто не трать»", next: "advice_simple", effect: {}, kind: "neutral" },
-          { label: "Предлагаю копить вместе", next: "together", effect: {}, kind: "good" }
-        ]
-      },
-      advice_503020: {
-        text: "О, круто! 50% на нужное, 30% на желания, 20% в копилку. Попробую так.",
-        actions: [
-          { label: "Советую вести таблицу расходов", next: "table", effect: {}, kind: "good" },
-          { label: "Просто рад, что помог", next: null, effect: {}, kind: "good" }
-        ]
-      },
-      advice_simple: {
-        text: "Легко сказать «не трать». А как именно?",
-        actions: [
-          { label: "Объясняю про 50/30/20", next: "advice_503020", effect: {}, kind: "good" },
-          { label: "Говорю: «Ну, удачи»", next: null, effect: {}, kind: "neutral" }
-        ]
-      },
-      together: {
-        text: "Давай! Тогда у нас будет общая цель. А как именно копить?",
-        actions: [
-          { label: "По 500 в неделю", next: "table", effect: {}, kind: "good" },
-          { label: "Вести общую таблицу расходов", next: "table", effect: {}, kind: "good" },
-          { label: "Просто складывать в копилку", next: "table", effect: {}, kind: "neutral" }
-        ]
-      },
-      table: {
-        text: "Отличная идея! Через месяц у нас уже была бы приличная сумма. Спасибо, ты настоящий друг.",
-        actions: [
-          { label: "Договорились!", next: null, effect: {}, kind: "good" }
-        ]
-      }
+{
+  id: "friend",
+  name: "Друг Артём",
+  avatar: "🧑",
+  isSafe: true,
+  startNode: "start",
+  nodes: {
+    start: {
+      text: "слушай, у меня проблема. хочу наушники за 8к, но деньги уходят вообще непонятно куда. вроде 10000 в месяц есть, а к концу месяца ноль. вчера опять на шаурму 490 спустил",
+      actions: [
+        { label: "Советую правило 50/30/20", next: "advice_503020", effect: {}, kind: "good" },
+        { label: "Говорю: «Просто не трать»", next: "advice_simple", effect: {}, kind: "neutral" },
+        { label: "Предлагаю копить вместе", next: "together", effect: {}, kind: "good" }
+      ]
+    },
+    advice_503020: {
+      text: "50/30/20? это чё вообще. звучит как домашка по математике",
+      actions: [
+        { label: "Объясняю: 50% на нужное, 30% на желания, 20% в копилку", next: "explain_503020", effect: {}, kind: "good" },
+        { label: "Говорю: «У тебя гугл есть»", next: "google_end", effect: {}, kind: "neutral" }
+      ]
+    },
+    explain_503020: {
+      text: "а, понял. то есть если у меня 10000, то 2000 в копилку? а остальное можно тратить спокойно?",
+      actions: [
+        { label: "Да, именно так. Главное — не жёстко, иногда можно и потратить", next: "table", effect: {}, kind: "good" },
+        { label: "Да, но 20% — это минимум, можно и больше", next: "table", effect: {}, kind: "good" }
+      ]
+    },
+    advice_simple: {
+      text: "легко сказать «не трать». а когда шаурма сама в руки прыгает?",
+      actions: [
+        { label: "Объясняю про 50/30/20", next: "advice_503020", effect: {}, kind: "good" },
+        { label: "Говорю: «Сам разберёшься, шаурма тебе в помощь!»", next: "result_bad", effect: {}, kind: "neutral" }
+      ]
+    },
+    together: {
+      text: "давай. а то одному скучно копить. как именно?",
+      actions: [
+        { label: "По 1000 в неделю", next: "table", effect: {}, kind: "good" },
+        { label: "Вести общую таблицу расходов", next: "table", effect: {}, kind: "good" },
+        { label: "Просто складывать в копилку", next: "table", effect: {}, kind: "neutral" }
+      ]
+    },
+    table: {
+      text: "ладно, попробуем. когда накоплю — с меня шаурма",
+      actions: [
+        { label: "Договорились", next: "result_good", effect: {}, kind: "good" }
+      ]
+    },
+    result_good: {
+      text: "спустя несколько месяцев... короче, купил. не без труда, но купил. шаурма с меня, я не забыл",
+      actions: [
+        { label: "Поздравляю!", next: null, effect: {}, kind: "good" }
+      ]
+    },
+    result_bad: {
+      text: "спустя несколько месяцев... так и не купил. деньги опять ушли на шаурму",
+      actions: [
+        { label: "Ну, бывает)))", next: null, effect: {}, kind: "neutral" }
+      ]
+    },
+    google_end: {
+      text: "ясно, спасибо за помощь",
+      actions: [
+        { label: "Ладно, потом расскажешь", next: "result_bad", effect: {}, kind: "neutral" }
+      ]
     }
   }
+},
 ];
 
 // final profiles by dominant axis
